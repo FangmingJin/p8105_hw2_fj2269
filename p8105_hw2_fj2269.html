@@ -375,27 +375,27 @@ summary {
 <h3>Problem 1</h3>
 <p><strong>Clean and clean Mr. Trash Wheel sheet</strong></p>
 <pre class="r"><code>trash_wheel_data = 
-  read_excel(&quot;./Q1/HealthyHarborWaterWheelTotals2018-7-28.xlsx&quot;, sheet = &quot;Mr. Trash Wheel&quot;, range = &quot;A2:N338&quot;) %&gt;%
+  read_excel(&quot;./Q1/Trash-Wheel-Collection-Totals-8-6-19.xlsx&quot;, sheet = &quot;Mr. Trash Wheel&quot;, range = &quot;A2:N408&quot;) %&gt;%
   janitor::clean_names() %&gt;%
   drop_na(dumpster) %&gt;%
   mutate(sports_balls = as.integer(round(sports_balls)))</code></pre>
 <p><strong>Clean and clean precipitation data for 2017 and 2018</strong></p>
 <pre class="r"><code>precipitation_2018_data = 
-  read_excel(&quot;./Q1/HealthyHarborWaterWheelTotals2018-7-28.xlsx&quot;, sheet = &quot;2018 Precipitation&quot;, range = &quot;A2:B15&quot;) %&gt;%
+  read_excel(&quot;./Q1/Trash-Wheel-Collection-Totals-8-6-19.xlsx&quot;, sheet = &quot;2018 Precipitation&quot;, range = &quot;A2:B15&quot;) %&gt;%
   janitor::clean_names() %&gt;%
   drop_na(month) %&gt;%
   mutate(year = rep(2018, 12))
 
 precipitation_2017_data = 
-  read_excel(&quot;./Q1/HealthyHarborWaterWheelTotals2018-7-28.xlsx&quot;, sheet = &quot;2017 Precipitation&quot;, range = &quot;A2:B15&quot;) %&gt;%
+  read_excel(&quot;./Q1/Trash-Wheel-Collection-Totals-8-6-19.xlsx&quot;, sheet = &quot;2017 Precipitation&quot;, range = &quot;A2:B15&quot;) %&gt;%
   janitor::clean_names() %&gt;%
   drop_na(month) %&gt;%
   mutate(year = rep(2017, 12))
 precipitation_data = 
   bind_rows(precipitation_2017_data, precipitation_2018_data) %&gt;%
   mutate(month = month.name[month])</code></pre>
-<p><em>In trash_wheel_data dataset, we filter 285 observations of 14 variable. In these observations, number of catagorized trash including plastic bottles, polystyrene, cigarette butts, glass bottles, grocery bags, etc are recorded. Besides, the total weight and volume of these trash are recorded. The median number of sports balls in a dumpster in 2017 is 194</em></p>
-<p><em>In percipitation dataset, the monthly percipitation is recorded. In precipitation_2018_data dataset, 7 observations is included and represents percipitation from January to July. And the sub percipitation is 23.5. In precipitation_2017_data dataset, 12 observations is included. And the sub percipitation is 32.93.</em></p>
+<p><em>In trash_wheel_data dataset, we filter 344 observations of 14 variable. In these observations, number of catagorized trash including plastic bottles, polystyrene, cigarette butts, glass bottles, grocery bags, etc are recorded. Besides, the total weight and volume of these trash are recorded. The median number of sports balls in a dumpster in 2017 is 194</em></p>
+<p><em>In percipitation dataset, the monthly percipitation is recorded. In precipitation_2018_data dataset, 12 observations is included and represents percipitation from January to July. And the sub percipitation is 70.33. In precipitation_2017_data dataset, 12 observations is included. And the sub percipitation is 32.93.</em></p>
 </div>
 <div id="problem-2" class="section level3">
 <h3>Problem 2</h3>
