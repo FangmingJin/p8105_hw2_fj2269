@@ -1,0 +1,169 @@
+---
+title: "p8105_hw2_fj2269"
+author: "Fangming Jin"
+date: "2019/9/27"
+output: html_document
+---
+
+Homework 2
+------------------------------------------------------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggridges)
+library(readxl)
+library(knitr)
+```
+
+### Problem 1
+
+**Clean and clean Mr. Trash Wheel sheet**
+
+```{r Q1S1, warning=FALSE}
+trash_wheel_data = 
+  read_excel("./Q1/Trash-Wheel-Collection-Totals-8-6-19.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N408") %>%
+  janitor::clean_names() %>%
+  drop_na(dumpster) %>%
+  mutate(sports_balls = as.integer(round(sports_balls)))
+```
+
+**Clean and clean precipitation data for 2017 and 2018**
+
+```{r Q1S2, warning=FALSE}
+precipitation_2018_data = 
+  read_excel("./Q1/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2018 Precipitation", range = "A2:B15") %>%
+  janitor::clean_names() %>%
+  drop_na(month) %>%
+  mutate(year = rep(2018, 12))
+
+precipitation_2017_data = 
+  read_excel("./Q1/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2017 Precipitation", range = "A2:B15") %>%
+  janitor::clean_names() %>%
+  drop_na(month) %>%
+  mutate(year = rep(2017, 12))
+precipitation_data = 
+  bind_rows(precipitation_2017_data, precipitation_2018_data) %>%
+  mutate(month = month.name[month])
+```
+
+*In trash_wheel_data dataset, we filter `r nrow(trash_wheel_data)` observations of `r ncol(trash_wheel_data)` variable. In these observations, number of catagorized trash including plastic bottles, polystyrene, cigarette butts, glass bottles, grocery bags, etc are recorded. Besides, the total weight and volume of these trash are recorded. The median number of sports balls in a dumpster in 2017 is `r median(pull(filter(trash_wheel_data, year == 2017),dumpster))`*
+
+*In percipitation dataset, the monthly percipitation is recorded. In precipitation_2018_data dataset, 7 observations is included and represents percipitation from January to July. And the sub percipitation is `r sum(precipitation_2018_data[1:7,2])`. In precipitation_2017_data dataset, 12 observations is included. And the sub percipitation is `r sum(precipitation_2017_data[,2])`.*
+
+### Problem 2
+
+**Clean the data in pols-month.csv**
+
+```{r Q2S1, warning=FALSE}
+pols_month_data = 
+  read_csv("./Q2/fivethirtyeight_datasets/pols-month.csv", col_types = "ciiiiiiii") %>%
+  janitor::clean_names() %>%
+  separate(mon, into = c("year", "month", "day")) %>%
+  mutate(year = as.numeric(year), month = month.name[as.numeric(month)]) %>%
+  pivot_longer(
+    cols = starts_with("prez"),
+    names_to = "president", 
+    names_prefix = "prez_",
+    values_to = "number") %>%
+  filter(number >= 1) %>%
+  select(-day, -number)
+```
+
+**Clean the data in snp.csv**
+
+```{r Q2S2, warning=FALSE}
+snp_data = 
+  read_csv("./Q2/fivethirtyeight_datasets/snp.csv", col_types = "cn") %>%   
+  janitor::clean_names() %>%
+  separate(date, into = c("month", "day", "year"), sep = "/") %>%
+  mutate(year = as.numeric(year), month = as.numeric(month)) %>%
+  arrange(year, month) %>%
+  mutate(month = month.name[month]) %>%
+  select(year, month, everything(), -day)
+```
+
+**Tidy the unemployment data**
+
+```{r Q2S3, warning=FALSE}
+unemployment_data = 
+  read_csv("./Q2/fivethirtyeight_datasets/unemployment.csv", col_types = "innnnnnnnnnnn") %>%
+  janitor::clean_names() %>%
+  rename(January = jan, February = feb, March = mar, April = apr, May = may, June = jun, July = jul, August = aug, September = sep, October = oct, November = nov, December = dec) %>%
+  pivot_longer(
+    January:December,
+    names_to = "month", 
+    values_to = "unemployment")
+```
+
+**Merge data**
+
+```{r Q2S4, warning=FALSE}
+snp_into_pols = 
+  left_join(pols_month_data, snp_data, by = c("year", "month"))
+unemployment_into_snppols = 
+  left_join(snp_into_pols, unemployment_data, by = c("year", "month"))
+```
+
+*Pols_month_data dataset contains the number of national politicians who are democratic or republican over time. Snp_data dataset contains the closing values of the S&P stock index over time. Unemployment_data contains monthly unemployment percentage over time.*
+
+*Unemployment_into_snppols cotains 822 observation and 10 variables including year, month, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, president, close. And it joints the contain of pols_month_data, snp_data and unemployment_data from January 1947 to June 2015.*  
+
+### Question 3
+
+**Clean the data in Popular_Baby_Names.csv**
+
+```{r Q3S1, warning=FALSE}
+baby_names_data = 
+  read_csv("./Q3/Popular_Baby_Names.csv", col_types = "icccii") %>%
+  janitor::clean_names()%>%
+  mutate(childs_first_name = str_to_upper(childs_first_name),
+         ethnicity = replace(ethnicity, ethnicity== "ASIAN AND PACI", "ASIAN AND PACIFIC ISLANDER"),
+         ethnicity = replace(ethnicity, ethnicity== "BLACK NON HISP", "BLACK NON HISPANIC"),
+         ethnicity = replace(ethnicity, ethnicity== "WHITE NON HISP", "WHITE NON HISPANIC")) %>%
+  distinct()
+```
+
+**Product table showing the rank in popularity of the name “Olivia” as a female baby name over time**
+
+```{r Q3S2,results = 'asis'}
+Olivia_data =  
+  filter(baby_names_data, childs_first_name == "OLIVIA"&gender == "FEMALE") %>%
+  select(year_of_birth, ethnicity, rank) %>%
+  pivot_wider(
+    names_from = "ethnicity", 
+    values_from = "rank")  %>%
+  rename("Black" = `BLACK NON HISPANIC` , "White" = `WHITE NON HISPANIC`, 
+         "Asian & Pacific Islander" = `ASIAN AND PACIFIC ISLANDER`, "Hispanic" = `HISPANIC`,
+         "Year" = year_of_birth)
+kable(Olivia_data, align = 'c', caption = "Rank of the name Olivia as a female baby name")
+```
+
+**Produting the table showing the most popular name among male children over time**
+
+```{r Q3S3, results = 'asis'}
+male_data = 
+  filter(baby_names_data, gender == "MALE"&rank == 1) %>%
+  select(year_of_birth, ethnicity, childs_first_name) %>%
+  pivot_wider(
+    names_from = "ethnicity", 
+    values_from = "childs_first_name") %>%
+  rename("Black" = `BLACK NON HISPANIC` , "White" = `WHITE NON HISPANIC`, 
+         "Asian & Pacific Islander" = `ASIAN AND PACIFIC ISLANDER`, "Hispanic" = `HISPANIC`,
+         "Year" = year_of_birth)
+kable(male_data, align = 'c', caption = "The most popular male name")
+```
+
+**Make scatterplot to show the number of white boy with a name against the rank in popularity of that name in 2016**
+
+```{r}
+male_white_2016 = 
+  filter(baby_names_data, gender == "MALE"&ethnicity == "WHITE NON HISPANIC"&year_of_birth == 2016) %>%
+  select(childs_first_name, count, rank) 
+scatterplot_male_white = 
+  ggplot(male_white_2016, aes(x = rank, y = count, color = rank)) +  
+  geom_point(size = 3, alpha = .5) + 
+  labs(title = "Count of white male children's name against rank in popularity", x="Rank", y="Count") +
+  geom_smooth(size = 1, color = "black", method = "gam", formula = y ~ s(x, bs = "cs"), se = FALSE)
+scatterplot_male_white
+```
